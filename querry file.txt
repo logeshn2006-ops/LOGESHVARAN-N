@@ -1,0 +1,160 @@
+ correct the code based on this querry -- Database: exam_system
+
+CREATE DATABASE IF NOT EXISTS exam_system;
+USE exam_system;
+
+-- Users table (common for all user types)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    user_type ENUM('admin', 'staff', 'student') NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    dob DATE,
+    gender ENUM('male', 'female', 'other'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Admin table
+CREATE TABLE admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Staff table
+CREATE TABLE staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    employee_id VARCHAR(50) NOT NULL,
+    designation VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    years_of_experience INT DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Students table
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    father_name VARCHAR(100),
+    mother_name VARCHAR(100),
+    joining_year INT,
+    department VARCHAR(100) NOT NULL,
+    academic_year ENUM('first_year', 'second_year', 'third_year', 'fourth_year') NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Departments table
+CREATE TABLE departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
+);
+
+-- Questions table
+CREATE TABLE questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question_text TEXT NOT NULL,
+    option1 VARCHAR(255) NOT NULL,
+    option2 VARCHAR(255) NOT NULL,
+    option3 VARCHAR(255) NOT NULL,
+    option4 VARCHAR(255) NOT NULL,
+    correct_answer ENUM('A', 'B', 'C', 'D') NOT NULL,
+    question_type ENUM('mcq', 'written') DEFAULT 'mcq',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Exams table
+CREATE TABLE exams (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    academic_year ENUM('first_year', 'second_year', 'third_year', 'fourth_year') NOT NULL,
+    duration INT NOT NULL, -- in minutes
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Exam Questions table (many-to-many relationship)
+CREATE TABLE exam_questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_id INT NOT NULL,
+    question_id INT NOT NULL,
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+-- Exam Results table
+CREATE TABLE exam_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_id INT NOT NULL,
+    student_id INT NOT NULL,
+    score DECIMAL(5,2) NOT NULL,
+    max_score DECIMAL(5,2) NOT NULL,
+    status ENUM('passed', 'failed') NOT NULL,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Password Resets table
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(100) NOT NULL,
+    user_role ENUM('admin', 'staff', 'student') NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    expiry_time TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default admin
+INSERT INTO users (username, password, user_type, name, email) 
+VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Administrator', 'admin@example.com');
+
+INSERT INTO admin (user_id) VALUES (1);
+-- புதிய pending_students டேபிள்
+CREATE TABLE `pending_students` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `dob` date DEFAULT NULL,
+  `gender` enum('male','female','other') DEFAULT NULL,
+  `father_name` varchar(100) DEFAULT NULL,
+  `mother_name` varchar(100) DEFAULT NULL,
+  `joining_year` int(11) DEFAULT NULL,
+  `department` varchar(100) NOT NULL,
+  `academic_year` enum('first_year','second_year','third_year','fourth_year') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- புதிய pending_staff டேபிள்
+CREATE TABLE `pending_staff` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `dob` date DEFAULT NULL,
+  `gender` enum('male','female','other') DEFAULT NULL,
+  `employee_id` varchar(50) NOT NULL,
+  `designation` varchar(100) NOT NULL,
+  `department` varchar(100) NOT NULL,
+  `experience` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
